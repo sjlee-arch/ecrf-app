@@ -5,15 +5,14 @@ const path = require('path');
 
 const app = express();
 
-// (문제 원인 찾기 위해) 일단 CORS 전체 허용
+// CORS 허용 + JSON 파서
 app.use(cors());
 app.use(express.json());
 
-// Render 환경에서 쓸 데이터 파일 경로
-// 로컬/클라우드 모두에서 쓸 수 있도록 프로젝트 루트 기준으로 둡니다.
+// 데이터 파일 경로(로컬/클라우드 공통)
 const DATA_FILE = path.join(process.cwd(), 'ecrf-data.json');
 
-// 최초 기동 시 데이터 파일이 없으면 기본 DEMO 데이터로 생성
+// DB 초기화: 파일 없으면 DEMO 생성
 function ensureDB() {
   if (!fs.existsSync(DATA_FILE)) {
     const demo = {
@@ -22,10 +21,9 @@ function ensureDB() {
           studyId: 'DEMO',
           visits: ['V1', 'V2', 'V3'],
           forms: [
-            // 템플릿(폼) 정의 예시 2개
             {
-              id: 'DM',                    // Code
-              templateFormId: 'DM-1.0.0',  // 템플릿ID
+              id: 'DM',
+              templateFormId: 'DM-1.0.0',
               code: 'DM',
               version: '1.0.0',
               schema: {
@@ -36,12 +34,16 @@ function ensureDB() {
                     code: 'BASIC',
                     title: '기본',
                     fields: [
-                      { path: 'DOB',   label: '생년월일', type: 'date',   required: true },
-                      { path: 'AGE',   label: '연령',     type: 'number', readOnly: true },
-                      { path: 'SEX',   label: '성별',     type: 'select',  required: true,
-                        options: [{v:'M',l:'남'},{v:'F',l:'여'}] },
-                      { path: 'CONSENT', label: '동의여부', type: 'radio', required: true,
-                        options: [{v:'Y',l:'예'},{v:'N',l:'아니오'}] }
+                      { path: 'DOB', label: '생년월일', type: 'date', required: true },
+                      { path: 'AGE', label: '연령', type: 'number', readOnly: true },
+                      {
+                        path: 'SEX', label: '성별', type: 'select', required: true,
+                        options: [{ v: 'M', l: '남' }, { v: 'F', l: '여' }]
+                      },
+                      {
+                        path: 'CONSENT', label: '동의여부', type: 'radio', required: true,
+                        options: [{ v: 'Y', l: '예' }, { v: 'N', l: '아니오' }]
+                      }
                     ]
                   }
                 ]
@@ -60,16 +62,17 @@ function ensureDB() {
                     code: 'CONSENT',
                     title: '동의',
                     fields: [
-                      { path: 'SIGNED', label: '동의서 서명', type: 'radio', required: true,
-                        options: [{v:'Y',l:'예'},{v:'N',l:'아니오'}] },
-                      { path: 'DATE',   label: '서명일', type: 'date', required: true }
+                      {
+                        path: 'SIGNED', label: '동의서 서명', type: 'radio', required: true,
+                        options: [{ v: 'Y', l: '예' }, { v: 'N', l: '아니오' }]
+                      },
+                      { path: 'DATE', label: '서명일', type: 'date', required: true }
                     ]
                   }
                 ]
               }
             }
           ],
-          // 각 폼ID별 저장 레코드
           records: {
             'DM-1.0.0': [],
             'IC-1.0.0': []
@@ -96,13 +99,12 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, ts: new Date().toISOString() });
 });
 
-// 스터디 정의: /api/studies/:id/definition
+// 스터디 정의
 app.get('/api/studies/:id/definition', (req, res) => {
   const db = readDB();
   const study = db.studies[req.params.id];
   if (!study) return res.status(404).json({ error: 'study not found' });
 
-  // 프론트가 쓰기 좋은 형태로 리턴
   res.json({
     studyId: study.studyId,
     visits: study.visits,
@@ -116,7 +118,7 @@ app.get('/api/studies/:id/definition', (req, res) => {
   });
 });
 
-// 폼 스키마 단건 조회: /api/studies/:id/forms/:templateFormId
+// 폼 스키마 단건
 app.get('/api/studies/:id/forms/:templateFormId', (req, res) => {
   const db = readDB();
   const study = db.studies[req.params.id];
@@ -128,7 +130,7 @@ app.get('/api/studies/:id/forms/:templateFormId', (req, res) => {
   res.json(form);
 });
 
-// 레코드 목록: /api/studies/:id/forms/:templateFormId/records
+// 레코드 목록
 app.get('/api/studies/:id/forms/:templateFormId/records', (req, res) => {
   const db = readDB();
   const study = db.studies[req.params.id];
@@ -138,7 +140,7 @@ app.get('/api/studies/:id/forms/:templateFormId/records', (req, res) => {
   res.json(list);
 });
 
-// 레코드 저장(추가): /api/studies/:id/forms/:templateFormId/records
+// 레코드 저장
 app.post('/api/studies/:id/forms/:templateFormId/records', (req, res) => {
   const db = readDB();
   const study = db.studies[req.params.id];
@@ -147,7 +149,7 @@ app.post('/api/studies/:id/forms/:templateFormId/records', (req, res) => {
   const tfid = req.params.templateFormId;
   study.records[tfid] ??= [];
   const payload = req.body || {};
-  payload._id = Date.now().toString(36); // 간단한 ID
+  payload._id = Date.now().toString(36);
   payload._savedAt = new Date().toISOString();
 
   study.records[tfid].push(payload);
@@ -155,12 +157,12 @@ app.post('/api/studies/:id/forms/:templateFormId/records', (req, res) => {
   res.status(201).json({ ok: true, id: payload._id });
 });
 
-// 루트 페이지(동작 확인용)
+// 루트(확인용)
 app.get('/', (_, res) => {
   res.send('eCRF API is running on Render!');
 });
 
-// 포트/바인딩
+// 포트 바인딩(Render는 process.env.PORT 사용)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`서버 실행됨 => http://localhost:${PORT}`);
