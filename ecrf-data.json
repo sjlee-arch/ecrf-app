@@ -1,63 +1,52 @@
 {
   "studies": {
     "DEMO": {
-      "studyId": "DEMO",
+      "id": "DEMO",
+      "name": "Demo Study",
       "forms": [
         {
           "id": "11b17d38-ed87-4c83-84d6-1029275684c4",
           "templateFormId": "d96aa63c-c053-4ea9-8f36-b1a868d57553",
           "code": "IC",
           "version": "1.0.0",
-          "visits": [
-            "V1",
-            "V2"
-          ]
+          "visits": ["V1", "V2"]
         },
         {
           "id": "dfd09de8-f2c1-4c41-b2c2-fdb62a90c6e6",
           "templateFormId": "b54af585-1e4d-4eb7-bec9-df875cdf7414",
           "code": "AE",
           "version": "1.0.0",
-          "visits": [
-            "V1",
-            "V2"
+          "visits": ["V1", "V2"]
+        }
+      ],
+      "definition": {
+        "IC": {
+          "title": "Informed Consent",
+          "sections": [
+            {
+              "id": "main",
+              "title": "Main",
+              "fields": [
+                { "id": "subjectId", "type": "text", "label": "Subject ID", "required": true },
+                { "id": "signed", "type": "checkbox", "label": "Signed?" }
+              ]
+            }
+          ]
+        },
+        "AE": {
+          "title": "Adverse Event",
+          "sections": [
+            {
+              "id": "main",
+              "title": "Main",
+              "fields": [
+                { "id": "eventTerm", "type": "text", "label": "Event term" },
+                { "id": "serious", "type": "checkbox", "label": "Serious?" }
+              ]
+            }
           ]
         }
-      ]
+      }
     }
-  },
-  "records": {
-    "54464f4f-c764-4443-a942-1071ecb613b3": [
-      {
-        "id": "0ce4a681-8f50-4709-84a9-25d053c216de",
-        "data": {
-          "SIGNED": "Y",
-          "DATE": "2025-09-01"
-        },
-        "createdAt": "2025-09-08T03:13:39.752Z"
-      }
-    ],
-    "11b17d38-ed87-4c83-84d6-1029275684c4": [
-      {
-        "id": "7506a640-dd67-4328-970d-537a8c92a804",
-        "data": {
-          "SIGNED": "Y",
-          "DATE": "2025-09-01"
-        },
-        "createdAt": "2025-09-08T03:15:42.824Z"
-      }
-    ],
-    "dfd09de8-f2c1-4c41-b2c2-fdb62a90c6e6": [
-      {
-        "id": "26796473-f536-4bd6-b0b9-62214a733b3a",
-        "data": {
-          "TERM": "감기",
-          "START": "2025-09-08",
-          "END": "2025-09-09",
-          "SEVERITY": "1"
-        },
-        "createdAt": "2025-09-08T03:24:31.285Z"
-      }
-    ]
   }
 }
