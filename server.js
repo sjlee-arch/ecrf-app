@@ -59,6 +59,13 @@ app.get('/api/definition', (_req, res) => {
   res.json(study);
 });
 
+app.get('/api/forms', (req, res) => {
+  res.json([
+    { id: 'DM-1.0.0', code: 'DM', name: 'Demographics', version: '1.0.0' },
+    { id: 'IC-1.0.0', code: 'IC', name: 'Informed Consent', version: '1.0.0' }
+  ]);
+});
+
 // 3) 특정 스터디의 폼/정의
 app.get('/api/studies/:studyId/forms', (req, res) => {
   const db = loadDB();
